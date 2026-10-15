@@ -151,22 +151,24 @@
     display: inline-flex; align-items: center; gap: 4px;
     flex: 1 1 auto; min-width: 0; height: 100%;
     overflow-x: auto; overflow-y: hidden;
-    padding: 5px 0;
+    padding: 6px 0 0;
     scrollbar-width: none;
   }
   .task-tabs-scroll::-webkit-scrollbar { height: 0; }
   .task-tab {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 0 10px 0 14px; height: 32px;
-    border: 1px solid #e8e8e8; border-radius: 4px;
-    font-size: 13px; color: #555; background: #fafafa;
+    padding: 0 10px 0 14px; height: 100%;
+    border: 1px solid #e8e8e8;
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    font-size: 13px; color: #555; background: #f5f5f5;
     cursor: pointer; white-space: nowrap; flex-shrink: 0;
     transition: all 0.15s ease;
     user-select: none;
   }
-  .task-tab:hover { background: #e6f4ff; border-color: #91caff; color: #1677ff; }
+  .task-tab:hover { color: #1677ff; }
   .task-tab.active {
-    background: #e6f4ff; border-color: #1677ff; color: #1677ff; font-weight: 500;
+    color: #1677ff; background: #fff; font-weight: 500;
   }
   .task-tab .task-close {
     display: inline-flex; align-items: center; justify-content: center;
@@ -3849,6 +3851,16 @@
           return;
         }
       }
+      // 重复打开同一个单据：该单据的详情页签已存在时，直接切回既有页签，不重复新建
+      if (docNo && startView === 'detail') {
+        const existing = this.tasks.find(t => t.docNo === docNo && t.module === module && t.state.view === 'detail');
+        if (existing) {
+          this.activeId = existing.id;
+          this.render();
+          this.applyTaskView();
+          return;
+        }
+      }
       const id = 'T' + (this._seq++);
       const task = {
         id, module: module || ('mod_' + id),
@@ -3919,8 +3931,10 @@
       const bar = document.getElementById('taskTabs');
       if (!bar) return;
       const tabs = this.tasks.map(t => {
-        const label = t.docNo ? (t.docNo.length > 6 ? t.docNo.slice(0, 6) + '...' : t.docNo) : t.title;
-        const titleAttr = t.docNo ? ` title="${t.docNo}"` : '';
+        const fullName = t.docNo || t.title;
+        const label = fullName.length > 16 ? fullName.slice(0, 16) + '...' : fullName;
+        const safeTitle = String(fullName).replace(/"/g, '&quot;');
+        const titleAttr = ` title="${safeTitle}"`;
         return `
         <div class="task-tab ${t.id === this.activeId ? 'active' : ''}" onclick="TASK_CTX.switchTo('${t.id}')" data-task-id="${t.id}">
           <span${titleAttr}>${label}</span>
@@ -4028,6 +4042,9 @@
       } else if (t.state.view === 'detail') {
         lv.style.display = 'none';
         nv.style.display = 'block';
+        // 详情页（view 模式）隐藏面包屑，新增页（create 模式）保留
+        const bc = nv.querySelector('.breadcrumb');
+        if (bc) bc.style.display = (t.state.detailMode === 'view') ? 'none' : '';
         this._removePlaceholder();
       } else {
         lv.style.display = 'block';
