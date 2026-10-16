@@ -286,6 +286,21 @@
   .cs-trigger.is-open::after {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231890ff' stroke-width='2'%3E%3Cpolyline points='6 15 12 9 18 15'/%3E%3C/svg%3E");
   }
+  /* 供应商可搜索下拉：外层为可输入文本框（combobox），箭头用背景图实现（input 不支持 ::after） */
+  .form-control.has-custom-select .cs-trigger.cs-trigger-input {
+    cursor: text;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px 12px;
+  }
+  .form-control.has-custom-select .cs-trigger.cs-trigger-input:focus {
+    outline: none;
+    border-color: #1890ff;
+  }
+  .form-control.has-custom-select .cs-trigger.cs-trigger-input.is-open {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231890ff' stroke-width='2'%3E%3Cpolyline points='6 15 12 9 18 15'/%3E%3C/svg%3E");
+  }
   .cs-dropdown {
     position: absolute; left: -1px; right: -1px; top: 100%; margin-top: -1px;
     background: #fff; border: 1px solid #1890ff; border-radius: 0 0 4px 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
@@ -301,16 +316,8 @@
   .cs-option:hover { background: #e6f7ff; color: #1890ff; }
   .cs-option.is-selected { background: #e6f7ff; color: #1890ff; font-weight: 500; }
 
-  /* 可搜索下拉（供应商筛选）：搜索框固定在顶部，列表独立滚动 */
+  /* 可搜索下拉（供应商筛选）：无内部搜索框，列表独立滚动 */
   .cs-dropdown.cs-searchable { padding: 0; max-height: none; overflow: visible; }
-  .cs-search { padding: 6px 8px; border-bottom: 1px solid #f0f0f0; }
-  .cs-search input {
-    width: 100%; height: 28px; padding: 0 8px; box-sizing: border-box;
-    border: 1px solid #d9d9d9; border-radius: 4px; outline: none;
-    font-size: 13px; color: #333;
-    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  }
-  .cs-search input:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.12); }
   .cs-list { max-height: 224px; overflow-y: auto; overflow-x: hidden; }
   .cs-empty { padding: 16px; text-align: center; color: #999; font-size: 12px; font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
 
@@ -4758,8 +4765,13 @@
       const t = fc.querySelector('.cs-trigger');
       if (!s || !t || s.selectedIndex < 0) return;
       const opt = s.options[s.selectedIndex];
-      t.textContent = opt.text;
-      t.classList.toggle('is-placeholder', (opt.value === '' || opt.disabled === true));
+      const isEmpty = (opt.value === '' || opt.disabled === true);
+      if (t.tagName === 'INPUT') {
+        t.value = isEmpty ? '' : opt.text;
+      } else {
+        t.textContent = opt.text;
+      }
+      t.classList.toggle('is-placeholder', isEmpty);
     });
     toast('筛选条件已重置', 'success');
   }
@@ -8073,11 +8085,31 @@
       fc.classList.add('has-custom-select');
       const isSearchable = sel.classList.contains('supplier-filter-select');
 
-      const trigger = document.createElement('div');
-      trigger.className = 'cs-trigger';
+      let trigger;
+      if (isSearchable) {
+        trigger = document.createElement('input');
+        trigger.type = 'text';
+        trigger.className = 'cs-trigger cs-trigger-input';
+        trigger.placeholder = '请输入供应商编码或名称';
+      } else {
+        trigger = document.createElement('div');
+        trigger.className = 'cs-trigger';
+      }
       fc.insertBefore(trigger, sel.nextSibling);
 
       function syncLabel() {
+        if (isSearchable) {
+          // 可输入文本框：占位项（value 为空）时输入框为空、显示 placeholder；选中项时填入文本
+          const idx = sel.selectedIndex;
+          if (idx >= 0 && sel.options[idx] && String(sel.options[idx].value).trim() !== '') {
+            trigger.value = sel.options[idx].text;
+            trigger.classList.remove('is-placeholder');
+          } else {
+            trigger.value = '';
+            trigger.classList.add('is-placeholder');
+          }
+          return;
+        }
         const idx = sel.selectedIndex;
         if (idx >= 0) {
           const opt = sel.options[idx];
@@ -8111,6 +8143,26 @@
         });
         return div;
       }
+      function renderList(kw) {
+        const list = fc.querySelector(':scope > .cs-dropdown .cs-list');
+        if (!list) return;
+        kw = (kw || '').toString().toLowerCase();
+        list.innerHTML = '';
+        let matched = 0;
+        for (let i = 0; i < sel.options.length; i++) {
+          const opt = sel.options[i];
+          if (String(opt.value).trim() === '') continue;
+          if (kw && opt.text.toLowerCase().indexOf(kw) === -1) continue;
+          matched++;
+          list.appendChild(buildOption(opt, i));
+        }
+        if (matched === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'cs-empty';
+          empty.textContent = '无匹配供应商';
+          list.appendChild(empty);
+        }
+      }
       function openDropdown() {
         closeAllFilterDropdowns(trigger);
         if (trigger.classList.contains('is-open')) return;
@@ -8118,39 +8170,11 @@
         const dd = document.createElement('div');
         if (isSearchable) {
           dd.className = 'cs-dropdown cs-searchable';
-          const search = document.createElement('div');
-          search.className = 'cs-search';
-          const sinput = document.createElement('input');
-          sinput.type = 'text';
-          sinput.placeholder = '请输入供应商编码或名称';
-          search.appendChild(sinput);
-          dd.appendChild(search);
           const list = document.createElement('div');
           list.className = 'cs-list';
           dd.appendChild(list);
-          function renderList(kw) {
-            kw = (kw || '').toString().toLowerCase();
-            list.innerHTML = '';
-            let matched = 0;
-            for (let i = 0; i < sel.options.length; i++) {
-              const opt = sel.options[i];
-              if (String(opt.value).trim() === '') continue;
-              if (kw && opt.text.toLowerCase().indexOf(kw) === -1) continue;
-              matched++;
-              list.appendChild(buildOption(opt, i));
-            }
-            if (matched === 0) {
-              const empty = document.createElement('div');
-              empty.className = 'cs-empty';
-              empty.textContent = '无匹配供应商';
-              list.appendChild(empty);
-            }
-          }
-          renderList('');
-          sinput.addEventListener('input', function() { renderList(this.value); });
-          sinput.addEventListener('click', function(ev) { ev.stopPropagation(); });
           fc.appendChild(dd);
-          setTimeout(function() { try { sinput.focus(); } catch(e) {} }, 0);
+          renderList(trigger.value);
         } else {
           dd.className = 'cs-dropdown';
           for (let i = 0; i < sel.options.length; i++) {
@@ -8162,16 +8186,25 @@
         }
       }
 
-      trigger.addEventListener('click', function(ev) {
-        ev.stopPropagation();
-        if (trigger.classList.contains('is-open')) {
-          trigger.classList.remove('is-open');
-          const dd = fc.querySelector(':scope > .cs-dropdown');
-          if (dd) dd.remove();
-        } else {
-          openDropdown();
-        }
-      });
+      if (isSearchable) {
+        // 可输入文本框：聚焦展开下拉，输入即时过滤，点击仅阻止冒泡不关闭
+        trigger.addEventListener('focus', function() {
+          if (!trigger.classList.contains('is-open')) openDropdown();
+        });
+        trigger.addEventListener('input', function() { renderList(this.value); });
+        trigger.addEventListener('click', function(ev) { ev.stopPropagation(); });
+      } else {
+        trigger.addEventListener('click', function(ev) {
+          ev.stopPropagation();
+          if (trigger.classList.contains('is-open')) {
+            trigger.classList.remove('is-open');
+            const dd = fc.querySelector(':scope > .cs-dropdown');
+            if (dd) dd.remove();
+          } else {
+            openDropdown();
+          }
+        });
+      }
     });
   }
   document.addEventListener('click', function() {
