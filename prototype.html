@@ -4127,9 +4127,9 @@
       } else if (t.state.view === 'detail') {
         lv.style.display = 'none';
         nv.style.display = 'block';
-        // 详情页（view 模式）隐藏面包屑，新增页（create 模式）保留
+        // 新增页、详情页均去掉面包屑导航栏
         const bc = nv.querySelector('.breadcrumb');
-        if (bc) bc.style.display = (t.state.detailMode === 'view') ? 'none' : '';
+        if (bc) bc.style.display = 'none';
         this._removePlaceholder();
       } else {
         lv.style.display = 'block';
