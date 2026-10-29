@@ -176,6 +176,9 @@
     color: #999; font-size: 14px; line-height: 1;
   }
   .task-tab .task-close:hover { background: #ff7875; color: #fff; }
+  .task-tab.dragging { opacity: 0.45; }
+  .task-tab.drop-before { box-shadow: -2px 0 0 0 #1677ff inset; }
+  .task-tab.drop-after { box-shadow: 2px 0 0 0 #1677ff inset; }
   .task-nav {
     display: flex; align-items: center; gap: 4px;
     margin-left: 8px; padding-left: 8px;
@@ -2021,10 +2024,10 @@
                 <th>开票供应商</th>
                 <th>开票国家</th>
                 <th class="amount">增值税/进口增值税</th>
-                <th class="amount">预缴所得税</th>
                 <th class="amount">预缴增值税</th>
-                <th class="amount">预扣所得税</th>
+                <th class="amount">预缴所得税</th>
                 <th class="amount">预扣增值税</th>
+                <th class="amount">预扣所得税</th>
                 <th class="amount">发票应付总额</th>
                 <th>关联附件</th>
                 <th><span data-zh="发票添加方式">发票添加方式</span></th>
@@ -3084,6 +3087,19 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="tabLimitOverlay" style="z-index: 300;">
+  <div class="modal" style="width: 420px; max-height: none;">
+    <div class="modal-header">
+      <span class="modal-title" data-zh="提示">提示</span>
+      <button class="modal-close" onclick="closeTabLimitTip()">×</button>
+    </div>
+    <div class="modal-body" id="tabLimitMessage" style="padding: 24px; font-size: 14px; color: #333; line-height: 1.6;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeTabLimitTip()" data-zh="确定">确定</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /mainApp -->
 
 <script>
@@ -3722,7 +3738,9 @@
       '正数发票填正数，负数发票填负数': 'Positive for positive invoice, negative for negative',
       '正数发票填负数，负数发票填正数': 'Negative for positive invoice, positive for negative',
       '份文件校验失败，请重新修改。': ' file(s) failed validation. Please correct them.',
-      '点击下载具体校验失败文件及失败原因。': 'Download the validation-failure report.'
+      '点击下载具体校验失败文件及失败原因。': 'Download the validation-failure report.',
+      '提示': 'Notice',
+      '确定': 'OK'
     },
     pt: {
       '数据应用': 'Aplicações de Dados',
@@ -3823,6 +3841,7 @@
     tasks: [],           // { id, module, title, subTitle, placeholder, createdAt, state:{...} }
     activeId: null,
     _seq: 1,
+    maxTabs: 20,             // 最大可同时打开的页签数量（含列表/详情/新增页签）
     /** 根据 module 拿配置（回退到 customs-prepaid 默认） */
     cfgOf(module) { return this.MODULE_CONFIG[module] || this.MODULE_CONFIG['customs-prepaid']; },
     _getDefaultInvoiceData() {
@@ -3867,6 +3886,11 @@
           this.applyTaskView();
           return;
         }
+      }
+      // 页签上限：到达上限不再新建页签，改为提示用户先关闭
+      if (this.tasks.length >= this.maxTabs) {
+        showTabLimitTip();
+        return;
       }
       const id = 'T' + (this._seq++);
       const task = {
@@ -3933,6 +3957,55 @@
       }
       this.render();
     },
+    /** 拖拽排序：把 dragId 移动到 targetId 之前(before=true)或之后(before=false) */
+    moveTask(dragId, targetId, before) {
+      const from = this.tasks.findIndex(t => t.id === dragId);
+      const to = this.tasks.findIndex(t => t.id === targetId);
+      if (from === -1 || to === -1 || from === to) return;
+      const [moved] = this.tasks.splice(from, 1);
+      const ti = this.tasks.findIndex(t => t.id === targetId);
+      this.tasks.splice(before ? ti : ti + 1, 0, moved);
+      this.render();
+    },
+    onTabDragStart(evt, id) {
+      this._dragId = id;
+      evt.dataTransfer.effectAllowed = 'move';
+      try { evt.dataTransfer.setData('text/plain', id); } catch (e) {}
+      const el = evt.currentTarget;
+      if (el) el.classList.add('dragging');
+    },
+    onTabDragOver(evt, id) {
+      if (!this._dragId) return;
+      evt.preventDefault();
+      evt.dataTransfer.dropEffect = 'move';
+      if (id === this._dragId) { this._clearTabDropIndicators(); return; }
+      this._clearTabDropIndicators();
+      const el = evt.currentTarget;
+      const rect = el.getBoundingClientRect();
+      const before = (evt.clientX - rect.left) < (rect.width / 2);
+      el.classList.add(before ? 'drop-before' : 'drop-after');
+    },
+    onTabDrop(evt, targetId) {
+      evt.preventDefault();
+      const dragId = this._dragId || (evt.dataTransfer && evt.dataTransfer.getData('text/plain'));
+      const el = evt.currentTarget;
+      const rect = el.getBoundingClientRect();
+      const before = (evt.clientX - rect.left) < (rect.width / 2);
+      this._clearTabDropIndicators();
+      document.querySelectorAll('.task-tab.dragging').forEach(n => n.classList.remove('dragging'));
+      if (dragId && dragId !== targetId) this.moveTask(dragId, targetId, before);
+      this._dragId = null;
+    },
+    onTabDragEnd() {
+      this._dragId = null;
+      this._clearTabDropIndicators();
+      document.querySelectorAll('.task-tab.dragging').forEach(n => n.classList.remove('dragging'));
+    },
+    _clearTabDropIndicators() {
+      document.querySelectorAll('.task-tab.drop-before, .task-tab.drop-after').forEach(n => {
+        n.classList.remove('drop-before', 'drop-after');
+      });
+    },
     /** 渲染 Tab 条 */
     render() {
       const bar = document.getElementById('taskTabs');
@@ -3943,7 +4016,12 @@
         const safeTitle = String(fullName).replace(/"/g, '&quot;');
         const titleAttr = ` title="${safeTitle}"`;
         return `
-        <div class="task-tab ${t.id === this.activeId ? 'active' : ''}" onclick="TASK_CTX.switchTo('${t.id}')" data-task-id="${t.id}">
+        <div class="task-tab ${t.id === this.activeId ? 'active' : ''}" data-task-id="${t.id}" draggable="true"
+             onclick="TASK_CTX.switchTo('${t.id}')"
+             ondragstart="TASK_CTX.onTabDragStart(event, '${t.id}')"
+             ondragover="TASK_CTX.onTabDragOver(event, '${t.id}')"
+             ondrop="TASK_CTX.onTabDrop(event, '${t.id}')"
+             ondragend="TASK_CTX.onTabDragEnd()">
           <span${titleAttr}>${label}</span>
           <span class="task-close" onclick="TASK_CTX.closeTask('${t.id}', event)" title="关闭任务">×</span>
         </div>
@@ -4221,6 +4299,22 @@
     const module = (t && t.module) || 'customs-prepaid';
     const subTitle = (t && t.subTitle) || '财务管理 / 清关业务 / 清关预付单';
     openTask({ module: module, title: docId || '详情', subTitle: subTitle, docNo: docId, startView: 'detail' });
+  }
+
+  // ============ 页签上限提示 ============
+  function showTabLimitTip() {
+    const ov = document.getElementById('tabLimitOverlay');
+    const msg = document.getElementById('tabLimitMessage');
+    const n = TASK_CTX.maxTabs;
+    const text = currentLang === 'en'
+      ? `You have reached the maximum limit of ${n} open tabs. Please close some unused tabs to open a new page.`
+      : `已达到最大打开页签数量（${n} 个），请先关闭不需要的页签后再打开新页面。`;
+    if (msg) msg.textContent = text;
+    if (ov) ov.classList.add('show');
+  }
+  function closeTabLimitTip() {
+    const ov = document.getElementById('tabLimitOverlay');
+    if (ov) ov.classList.remove('show');
   }
 
   // 重写 invoiceData 全局访问器：读写都路由到激活任务副本
@@ -4528,10 +4622,10 @@
         <th>开票供应商</th>
         <th>开票国家</th>
         <th class="amount">增值税/进口增值税</th>
-        <th class="amount">预缴所得税</th>
         <th class="amount">预缴增值税</th>
-        <th class="amount">预扣所得税</th>
+        <th class="amount">预缴所得税</th>
         <th class="amount">预扣增值税</th>
+        <th class="amount">预扣所得税</th>
         <th class="amount">发票应付总额</th>
         <th>关联附件</th>
         <th><span data-zh="发票添加方式">发票添加方式</span></th>
@@ -4915,10 +5009,10 @@
             <td style="max-width: 120px; overflow: hidden; text-overflow: ellipsis;">${row.supplier}</td>
             <td>${row.country}</td>
             <td class="amount">${row.vatImportTax}</td>
-            <td class="amount">${row.prepaidIncomeTax}</td>
             <td class="amount">${row.prepaidVat}</td>
-            <td class="amount">${row.withholdingIncomeTax}</td>
+            <td class="amount">${row.prepaidIncomeTax}</td>
             <td class="amount">${row.withholdingVat}</td>
+            <td class="amount">${row.withholdingIncomeTax}</td>
             <td class="amount">${row.invoicePayableTotal}</td>
             <td>${row.attachment ? `<span style="color: #1890ff; cursor: pointer;">${row.attachment}</span>` : '-'}</td>
             ${addMethodCell}
