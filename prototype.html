@@ -4973,9 +4973,11 @@
         const addMethod = row.addMethod || '手工录入';
         const addMethodText = i18n(addMethod);
         const addMethodCell = `<td>${addMethodText}</td>`;
-        const manualEditText = addMethod === '自动识别' ? (row.isManualEdit === '是' ? i18n('是') : i18n('否')) : '-';
+        const manualEditText = addMethod === '手工录入' ? '' : (row.isManualEdit === '是' ? i18n('是') : (row.isManualEdit === '否' ? i18n('否') : ''));
         const manualEditCell = `<td style="color:#000;">${manualEditText}</td>`;
-        const verifyResultCell = `<td class="verify-result-cell" onclick="showAiValidationResult(${idx})"><span class="verify-result-link">${i18n('详情')}</span></td>`;
+        const verifyResultCell = (row.aiValidation == null || row.aiValidation === '')
+          ? '<td></td>'
+          : `<td class="verify-result-cell" onclick="showAiValidationResult(${idx})"><span class="verify-result-link">${i18n('详情')}</span></td>`;
         if (isFreight) {
           // 运费预付单/报账单：15 列
           return `
@@ -7930,6 +7932,7 @@
   function buildInvoiceRow(item) {
     const nv = document.getElementById('newFormView');
     const isFreight = nv && nv.classList.contains('module-freight');
+    const isFailedOrigin = item.failedOrigin === true;
     // 判断是否人工修改：比较当前值与原始识别值
     let isManualEdit = '否';
     if (item.originalValues) {
@@ -7955,9 +7958,9 @@
       withholdingVat: item.values.withholdingVat || '0.00',
       invoicePayableTotal: item.values.invoicePayableTotal || '0.00',
       attachment: item.file.name,
-      addMethod: item.failed ? '手工录入' : '自动识别',
-      isManualEdit: isManualEdit,
-      aiValidation: '信息校验均一致',
+      addMethod: isFailedOrigin ? '手工录入' : '自动识别',
+      isManualEdit: isFailedOrigin ? '' : isManualEdit,
+      aiValidation: isFailedOrigin ? '' : '信息校验均一致',
       aiOriginalValues: (!item.failedOrigin && item.originalValues) ? Object.assign({}, item.originalValues) : null
     };
     // 运费版：otherTax = 其他税金（显示名）= key prepaidIncomeTax，保证 renderInvoiceTable 其他税金列正确显示
