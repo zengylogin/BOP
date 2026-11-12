@@ -798,12 +798,13 @@
   .ai-file-icon.img { background: #52c41a; }
   .ai-file-icon.pdf { background: #ff4d4f; }
   .ai-file-name-cell {
-    color: #333; overflow: hidden; text-overflow: ellipsis;
-    white-space: nowrap; max-width: 280px;
+    color: #1890ff; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; max-width: 280px; cursor: pointer; text-decoration: none;
   }
+  .ai-file-name-cell:hover { color: #40a9ff; text-decoration: underline; }
   .ai-file-pagination {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-top: 8px; font-size: 12px; color: #666;
+    display: flex; align-items: center; justify-content: flex-end;
+    margin-top: 12px; font-size: 12px; color: #666;
   }
   .ai-file-pagination-right { display: flex; align-items: center; gap: 8px; }
   .ai-page-btn {
@@ -1192,12 +1193,6 @@
     padding: 4px 12px; border: 1px solid #f0f0f0; border-bottom: none;
     border-radius: 6px 6px 0 0; background: #fafafa; flex-shrink: 0;
     margin-bottom: -1px; flex-wrap: wrap;
-  }
-  .ai-action-bar .ai-inline-error-in-bar,
-  #aiActionBarError .ai-inline-error-in-bar {
-    width: 100%; padding: 4px 8px; margin: 2px 0 0;
-    border: 1px solid #ffa39e; background: #fff2f0; color: #cf1322;
-    border-radius: 3px; font-size: 12px; line-height: 1.4;
   }
   .ai-filter-tabs { display: inline-flex; gap: 4px; margin-left: 4px; }
   .ai-filter-tab {
@@ -1968,7 +1963,6 @@
           <button class="btn btn-default" onclick="openAiRecognizeModal()" style="position:relative;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             <span class="i18n-text">自动识别</span>
-            <span id="aiBadge" title="待确认的AI识别结果数量" style="display:none; position:absolute; top:-4px; right:-4px; min-width:16px; height:16px; line-height:16px; padding:0 4px; background:#fa8c16; color:#fff; border-radius:8px; font-size:10px; font-weight:600; cursor:pointer;"></span>
           </button>
           <button class="btn btn-default" onclick="toast('导入', 'success')">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -2441,7 +2435,7 @@
                   </select>
                 </td>
                 <td><input type="text" class="input-inline" placeholder="备注最多输入50长度" style="width: 100%;"></td>
-                <td><input type="text" class="input-inline" value="初始态" readonly style="color: #1890ff; background: #e6f4ff; width: 100%;"></td>
+                <td><span style="color:#1890ff;">初始态</span></td>
                 <td><input type="text" class="input-inline" placeholder="请输入" style="width: 100%;"></td>
                 <td><input type="text" class="input-inline" style="width: 100%;"></td>
               </tr>
@@ -2936,80 +2930,36 @@
           <div class="ai-drop-hint" data-zh="支持多选">支持多选</div>
           <input type="file" id="aiFileInput" multiple accept="image/*,application/pdf" style="display:none;" onchange="handleAiFileSelect(event)">
         </div>
-        <div class="ai-file-list-wrap" id="aiFileListWrap" style="display:none;">
-          <div class="ai-file-search">
-            <div class="ai-file-search-item">
-              <label data-zh="附件名称">附件名称</label>
-              <input type="text" id="aiSearchName" placeholder="请输入附件名称" data-zh-ph="请输入附件名称">
-            </div>
-            <div class="ai-file-search-item">
-              <label data-zh="发票识别状态">发票识别状态</label>
-              <select id="aiSearchStatus" onchange="aiApplySearch()">
-                <option value="all">全部</option>
-                <option value="pending">待识别</option>
-                <option value="processing">识别中</option>
-                <option value="success">识别成功</option>
-                <option value="failed">识别失败</option>
-              </select>
-            </div>
-            <div class="ai-file-search-item">
-              <label data-zh="核对结果">核对结果</label>
-              <select id="aiSearchCheck" onchange="aiApplySearch()">
-                <option value="all">全部</option>
-                <option value="pending">待核对</option>
-                <option value="done">已核对</option>
-              </select>
-            </div>
-            <div class="ai-file-search-actions" style="margin-left: 0;">
-              <button class="ai-search-btn primary" onclick="aiApplySearch()" data-zh="查询">查询</button>
-              <button class="ai-search-btn" onclick="aiResetSearch()" data-zh="重置">重置</button>
-            </div>
-            <div class="ai-file-search-actions">
-              <button class="ai-mini-btn primary" id="aiBatchDownloadBtn" onclick="aiBatchDownload()" data-zh="批量下载" disabled>批量下载</button>
-              <button class="ai-mini-btn danger" id="aiBatchDeleteBtn" onclick="aiBatchDelete()" data-zh="批量删除" disabled>批量删除</button>
-            </div>
-          </div>
+        <div class="ai-file-list-wrap" id="aiFileListWrap">
           <div class="ai-file-table-wrap">
             <table class="ai-file-table">
               <thead>
                 <tr>
-                  <th style="width:36px;"><input type="checkbox" id="aiFileSelectAll" onchange="aiToggleSelectAll(this)"></th>
-                  <th style="width:50px;" data-zh="序号">序号</th>
+                  <th style="width:60px;" data-zh="序号">序号</th>
                   <th data-zh="附件名称">附件名称</th>
-                  <th style="width:100px;" data-zh="附件格式" id="aiThFormat">附件格式</th>
-                  <th style="width:100px;" data-zh="附件大小" id="aiThSize">附件大小</th>
-                  <th style="width:100px; display:none;" data-zh="税费类型" id="aiThTaxType">税费类型</th>
-                  <th style="width:100px; display:none;" data-zh="开票供应商" id="aiThSupplier">开票供应商</th>
-                  <th style="width:120px;" data-zh="发票识别状态">发票识别状态</th>
-                  <th style="width:100px;" data-zh="核对结果">核对结果</th>
-                  <th style="width:70px; text-align:right;" data-zh="操作">操作</th>
+                  <th style="width:110px;" data-zh="附件格式">附件格式</th>
+                  <th style="width:80px;" data-zh="操作">操作</th>
                 </tr>
               </thead>
-              <tbody id="aiFileTbody"></tbody>
+              <tbody id="aiFileListBody"></tbody>
             </table>
           </div>
-          <div class="ai-file-pagination">
-            <div class="ai-file-toolbar-left">
-              <span id="aiFileTotalLabel">共 0 条</span>
-              <span style="color:#999;">|</span>
-              <span id="aiFileCheckedLabel">已选 0 条</span>
-            </div>
-            <div class="ai-file-pagination-right">
-              <button class="ai-page-btn" id="aiPagePrev" onclick="aiChangePage(-1)" data-zh="上一页">上一页</button>
-              <span id="aiPageInfo">1 / 1</span>
-              <button class="ai-page-btn" id="aiPageNext" onclick="aiChangePage(1)" data-zh="下一页">下一页</button>
-              <div class="ai-page-size">
-                <span data-zh="每页">每页</span>
-                <select id="aiPageSize" onchange="aiChangePageSize(this.value)">
-                  <option value="5">5</option>
-                  <option value="10" selected>10</option>
-                  <option value="20">20</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                </select>
-                <span data-zh="条">条</span>
-              </div>
-            </div>
+        </div>
+        <div class="ai-file-pagination" id="aiFilePagination" style="display:none;">
+          <div class="ai-file-pagination-right">
+            <button class="ai-page-btn" id="aiPrevPageBtn" onclick="aiPrevPage()">上一页</button>
+            <span id="aiPageInfo" style="color:#333;">1 / 1</span>
+            <button class="ai-page-btn" id="aiNextPageBtn" onclick="aiNextPage()">下一页</button>
+            <span class="ai-page-size">每页
+              <select id="aiPageSizeSelect" onchange="aiChangePageSize(this.value)">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              条
+            </span>
           </div>
         </div>
       </div>
@@ -3065,10 +3015,8 @@
 
   </div>
   <div class="drawer-footer" id="aiModalFooter">
-    <button class="btn btn-default" id="aiBackToListBtn" onclick="backToAiSelect()" style="display:none; margin-right: auto;">← <span data-zh="发票自动识别">发票自动识别</span></button>
     <button class="btn btn-default" id="aiCloseBtn" onclick="closeAiRecognizeModal()" data-zh="取消">取消</button>
     <button class="btn btn-primary" id="aiPrimaryBtn" onclick="startAiRecognize()" style="display:none;">开始识别</button>
-    <button class="btn btn-default" id="aiViewResultBtn" onclick="viewAiRecognizeResult()" style="display:none;">查看识别结果</button>
   </div>
 </div>
 
@@ -3096,6 +3044,40 @@
     <div class="modal-body" id="tabLimitMessage" style="padding: 24px; font-size: 14px; color: #333; line-height: 1.6;"></div>
     <div class="modal-footer">
       <button class="btn btn-primary" onclick="closeTabLimitTip()" data-zh="确定">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 清关付款单：实际支付金额调整弹窗（仅付款金额可编辑） -->
+<div class="modal-overlay" id="payAmtOverlay" style="z-index: 300;">
+  <div class="modal" style="width: 720px; max-height: none;">
+    <div class="modal-header">
+      <span class="modal-title">付款金额调整</span>
+      <button class="modal-close" onclick="closePayAmtModal()">×</button>
+    </div>
+    <div class="modal-body" style="padding: 28px 24px;">
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+        <div>
+          <div style="font-size: 13px; color: #333; font-weight: 500; margin-bottom: 6px;">税票类型</div>
+          <input type="text" class="form-input" value="运输费" readonly style="width: 100%; background: #fafafa; color: #666;">
+        </div>
+        <div>
+          <div style="font-size: 13px; color: #333; font-weight: 500; margin-bottom: 6px;">付款金额</div>
+          <input type="number" class="form-input" id="payAmtInput" value="0" style="width: 100%;">
+        </div>
+        <div>
+          <div style="font-size: 13px; color: #333; font-weight: 500; margin-bottom: 6px;">报账金额</div>
+          <input type="text" class="form-input" id="payAmtReimb" value="0" readonly style="width: 100%; background: #fafafa; color: #666;">
+        </div>
+        <div>
+          <div style="font-size: 13px; color: #333; font-weight: 500; margin-bottom: 6px;">预付金额</div>
+          <input type="text" class="form-input" value="0" readonly style="width: 100%; background: #fafafa; color: #666;">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closePayAmtModal()">取消</button>
+      <button class="btn btn-primary" onclick="confirmPayAmtModal()">确定</button>
     </div>
   </div>
 </div>
@@ -3660,6 +3642,10 @@
       '中': 'Medium',
       '低': 'Low',
       '附件名称': 'File Name',
+      '附件格式': 'File Format',
+      '操作': 'Action',
+      '暂无附件': 'No Attachments',
+      '确定要删除该附件吗？': 'Delete this attachment?',
       '发票识别状态': 'Recognition Status',
       '核对结果': 'Review Result',
       '全部': 'All',
@@ -3737,6 +3723,9 @@
       '负数发票': 'Negative invoice',
       '正数发票填正数，负数发票填负数': 'Positive for positive invoice, negative for negative',
       '正数发票填负数，负数发票填正数': 'Negative for positive invoice, positive for negative',
+      '请填写正数': 'Please enter a positive number',
+      '请填写负数': 'Please enter a negative number',
+      '请填写': 'Please enter',
       '份文件校验失败，请重新修改。': ' file(s) failed validation. Please correct them.',
       '点击下载具体校验失败文件及失败原因。': 'Download the validation-failure report.',
       '提示': 'Notice',
@@ -3802,13 +3791,7 @@
     document.querySelectorAll('[data-zh-ph]').forEach(el => {
       el.placeholder = i18n(el.getAttribute('data-zh-ph'));
     });
-    const statusMap = { all: '全部', pending: '待识别', processing: '识别中', success: '识别成功', failed: '识别失败' };
-    const checkMap = { all: '全部', pending: '待核对', done: '已核对' };
-    const s1 = document.getElementById('aiSearchStatus');
-    if (s1) Array.from(s1.options).forEach(o => { const k = statusMap[o.value]; if (k) o.textContent = i18n(k); });
-    const s2 = document.getElementById('aiSearchCheck');
-    if (s2) Array.from(s2.options).forEach(o => { const k = checkMap[o.value]; if (k) o.textContent = i18n(k); });
-    // 若发票自动识别抽屉当前处于打开状态，重渲染动态内容（字段标签、状态徽章、按钮、统计文案）
+    // 若发票自动识别抽屉当前处于打开状态，重渲染动态内容（字段标签、按钮、统计文案）
     const panel = document.getElementById('aiDrawerPanel');
     if (panel && panel.classList.contains('show')) {
       const resultVisible = document.getElementById('aiStateResult').style.display !== 'none';
@@ -3816,7 +3799,7 @@
         renderAiResults();
         showAiState('result');
       } else {
-        renderAiFileList();
+        updateAiSelectedCount();
         showAiState('select');
       }
     }
@@ -3910,8 +3893,6 @@
           aiResults: { success: [], failed: [] },
           aiSelectedFiles: [],
           aiPendingResults: null,
-          aiFileSelectedSet: new Set(),
-          aiFilePage: 1,
           aiCurrentViewIdx: 0,
           aiFilterMode: 'all',
           aiGlobalTaxType: '',
@@ -4141,8 +4122,6 @@
         const listData = (cfg2 && cfg2.useFreightData) ? freightMockData : mockData;
         renderTable(listData);
       }
-      // 激活任务后刷新 AI 识别角标：角标数字取自当前任务的 aiPendingResults，避免跨任务串号
-      if (typeof updateAiBadge === 'function') updateAiBadge();
       // 恢复滚动
       setTimeout(() => window.scrollTo(0, t.state.scrollTop || 0), 0);
     },
@@ -4298,7 +4277,13 @@
     const t = TASK_CTX.active();
     const module = (t && t.module) || 'customs-prepaid';
     const subTitle = (t && t.subTitle) || '财务管理 / 清关业务 / 清关预付单';
-    openTask({ module: module, title: docId || '详情', subTitle: subTitle, docNo: docId, startView: 'detail' });
+    // 编辑状态判定：仅清关付款单按单据状态（单据撤回 / 单据创建）进入可编辑详情，其余状态只读
+    let detailMode = 'view';
+    if (module === 'customs-payment') {
+      const row = mockData.find(function (r) { return r.id === docId; });
+      if (row && (row.status === '单据撤回' || row.status === '单据创建')) detailMode = 'edit';
+    }
+    openTask({ module: module, title: docId || '详情', subTitle: subTitle, docNo: docId, startView: 'detail', detailMode: detailMode });
   }
 
   // ============ 页签上限提示 ============
@@ -4317,6 +4302,31 @@
     if (ov) ov.classList.remove('show');
   }
 
+  // ============ 实际支付金额调整弹窗 ============
+  var payAmtCurrentAnchor = null;
+  function openPayAmtModalRow(anchor) {
+    payAmtCurrentAnchor = anchor;
+    const input = document.getElementById('payAmtInput');
+    const raw = anchor ? anchor.textContent.trim().replace(/,/g, '') : '0';
+    const parsed = parseFloat(raw);
+    if (input) input.value = isNaN(parsed) ? '' : parsed;
+    const ov = document.getElementById('payAmtOverlay');
+    if (ov) ov.classList.add('show');
+  }
+  function closePayAmtModal() {
+    const ov = document.getElementById('payAmtOverlay');
+    if (ov) ov.classList.remove('show');
+    payAmtCurrentAnchor = null;
+  }
+  function confirmPayAmtModal() {
+    const input = document.getElementById('payAmtInput');
+    let val = input ? parseFloat(input.value) : NaN;
+    if (isNaN(val)) val = 0;
+    if (payAmtCurrentAnchor) payAmtCurrentAnchor.textContent = val.toFixed(2);
+    closePayAmtModal();
+    toast('付款金额已更新', 'success');
+  }
+
   // 重写 invoiceData 全局访问器：读写都路由到激活任务副本
   // （原先的 let invoiceData 已被替换为 TASK_CTX 管理，这里做兼容：
   //  所有既存代码直接引用 invoiceData 变量 — 我们用 Object.defineProperty 在 window 上）
@@ -4331,8 +4341,6 @@
       ['aiResults', () => ({ success: [], failed: [] })],
       ['aiSelectedFiles', () => []],
       ['aiPendingResults', () => null],
-      ['aiFileSelectedSet', () => new Set()],
-      ['aiFilePage', () => 1],
       ['aiCurrentViewIdx', () => 0],
       ['aiFilterMode', () => 'all'],
       ['aiGlobalTaxType', () => ''],
@@ -4635,6 +4643,56 @@
     applyAiI18n();
   }
 
+  // 清关付款单供应商信息行：editable=true 编辑态（七字段可编辑+实际支付金额蓝色可点），false 全只读
+  function _paymentSupplierRow(editable) {
+    const inp = 'width:100%;';
+    // 只读字段：仅展示纯文本（有值显示值、无值留空），不再渲染灰色输入框
+    const roTd = v => {
+      const t = (v == null || v === '') ? '' : String(v);
+      return t === '' ? '<td></td>' : `<td><span style="color:#333;">${t}</span></td>`;
+    };
+    // 7 个可编辑字段：编辑态用输入框，只读态改为纯文本（空）
+    const editText = ph => editable
+      ? `<td><input type="text" class="input-inline" placeholder="${ph}" style="${inp}"></td>`
+      : roTd('');
+    const editDate = () => editable
+      ? `<td><input type="date" class="input-inline" style="${inp}"></td>`
+      : roTd('');
+    const amtHtml = editable
+      ? `<a href="javascript:void(0)" style="color:#1890ff; text-decoration:none;" onclick="openPayAmtModalRow(this)">0.00</a>`
+      : `<span style="color:#333;">0.00</span>`;
+    const settleHtml = editable
+      ? `<td><select class="input-inline" style="padding: 4px 6px; width: 100%;"><option>电汇</option><option>信汇</option><option>承兑</option></select></td>`
+      : roTd('电汇');
+    return `
+          <tr>
+            <td>${editable ? `<button class="row-action" onclick="toast('添加行', 'success')">+</button>` : ''}</td>
+            ${roTd('SUP001')}
+            ${roTd('')}
+            ${roTd('')}
+            ${roTd('IDR')}
+            <td class="amount">${amtHtml}</td>
+            ${editText('仅账号付款要输入')}
+            ${editText('请输入')}
+            ${roTd('')}
+            ${roTd('')}
+            ${editText('请选择')}
+            ${editDate()}
+            ${settleHtml}
+            ${editText('请输入')}
+            ${editText('每输入一个PIB号按回车')}
+            ${roTd('4000')}
+            ${roTd('')}
+            ${roTd('')}
+            ${roTd('')}
+            ${roTd('A')}
+            ${roTd('')}
+            <td><span style="color:#1890ff;">初始态</span></td>
+            ${roTd('')}
+            ${roTd('')}
+          </tr>`;
+  }
+
   function _rebuildSupplierTable(moduleName) {
     const isFreight = moduleName === 'supplier-info' || moduleName === 'company-code';
     const nv = document.getElementById('newFormView');
@@ -4650,6 +4708,12 @@
     const thead = table.querySelector('thead tr');
     const tbody = table.querySelector('tbody');
     if (!colgroup || !thead) return;
+
+    // 清关付款单：编辑态（新增 create / 打开「单据撤回」或「单据创建」的单据 edit）部分字段可编辑，其余状态全只读
+    const isPayment = moduleName === 'customs-payment';
+    const act = (typeof TASK_CTX !== 'undefined' && TASK_CTX.active) ? TASK_CTX.active() : null;
+    const payMode = (act && act.module === 'customs-payment') ? (act.state.detailMode || '') : '';
+    const payEditable = isPayment && (payMode === 'create' || payMode === 'edit');
 
     if (isFreight) {
       // 运费预付单/报账单：付款凭证号→预付凭证号，与币种互换位置；币种改下拉；供应商银行账户改下拉；供应商名称/付款方凭证业务范围/计划项目/部门/利润中心/状态说明/退票重付单据 改只读；删除 PIB号
@@ -4708,9 +4772,9 @@
           <tr>
             <td><button class="row-action" onclick="toast('添加行', 'success')">+</button></td>
             <td><select class="input-inline" style="padding: 4px 6px; width: 100%;"><option value="" disabled selected>请选择</option><option>SUP001</option><option>SUP002</option></select></td>
-            <td><input type="text" class="input-inline" placeholder="请输入" readonly style="width: 100%; background:#fafafa; color:#666;"></td>
+            <td></td>
             <td><select class="input-inline" style="padding: 4px 6px; width: 100%;"><option value="" disabled selected>请选择</option><option>IDR</option><option>CNY</option><option>USD</option></select></td>
-            <td><input type="text" class="input-inline" value="PF20260827001" readonly style="width: 100%; background:#fafafa; color:#666;"></td>
+            <td><span style="color:#333;">PF20260827001</span></td>
             <td class="amount"><input type="number" class="input-inline" value="0" style="text-align: right; width: 100%;"></td>
             <td><input type="text" class="input-inline" placeholder="仅账号付款要输入" style="width: 100%;"></td>
             <td><select class="input-inline" style="padding: 4px 6px; width: 100%;"><option value="" disabled selected>请选择</option><option>账号001</option><option>账号002</option></select></td>
@@ -4720,15 +4784,15 @@
             <td><input type="date" class="input-inline" style="width: 100%;"></td>
             <td><select class="input-inline" style="padding: 4px 6px; width: 100%;"><option value="" disabled selected>请选择</option><option>电汇</option><option>信汇</option><option>承兑</option></select></td>
             <td><input type="text" class="input-inline" placeholder="每输入一个PIB号按回车" style="width: 100%;"></td>
-            <td><input type="text" class="input-inline" placeholder="4000" readonly style="width: 100%; background:#fafafa; color:#666;"></td>
-            <td><input type="text" class="input-inline" placeholder="请选择" readonly style="width: 100%; background:#fafafa; color:#666;"></td>
-            <td><input type="text" class="input-inline" placeholder="请输入" readonly style="width: 100%; background:#fafafa; color:#666;"></td>
-            <td><input type="text" class="input-inline" placeholder="请输入" readonly style="width: 100%; background:#fafafa; color:#666;"></td>
+            <td><span style="color:#333;">4000</span></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td><select class="input-inline" style="padding: 4px 6px; width: 100%;"><option value="" disabled selected>请选择</option><option>A</option><option>B</option></select></td>
             <td><input type="text" class="input-inline" placeholder="备注最多输入50长度" style="width: 100%;"></td>
-            <td><input type="text" class="input-inline" value="初始态" readonly style="color: #1890ff; background: #e6f4ff; width: 100%;"></td>
-            <td><input type="text" class="input-inline" placeholder="请输入" readonly style="width: 100%; background:#fafafa; color:#666;"></td>
-            <td><input type="text" class="input-inline" placeholder="请选择" readonly style="width: 100%; background:#fafafa; color:#666;"></td>
+            <td><span style="color:#1890ff;">初始态</span></td>
+            <td></td>
+            <td></td>
           </tr>`;
       }
     } else {
@@ -4786,7 +4850,7 @@
         <th>退票重付单据</th>`;
       // 恢复清关数据行
       if (tbody) {
-        tbody.innerHTML = `
+        tbody.innerHTML = isPayment ? _paymentSupplierRow(payEditable) : `
           <tr>
             <td><button class="row-action" onclick="toast('添加行', 'success')">+</button></td>
             <td><select class="input-inline" style="padding: 4px 6px; width: 100%;"><option>SUP001</option><option>SUP002</option></select></td>
@@ -4808,7 +4872,7 @@
             <td><input type="text" class="input-inline" placeholder="请输入" style="width: 100%;"></td>
             <td><select class="input-inline" style="padding: 4px 6px; width: 100%;"><option>A</option><option>B</option></select></td>
             <td><input type="text" class="input-inline" placeholder="备注最多输入50长度" style="width: 100%;"></td>
-            <td><input type="text" class="input-inline" value="初始态" readonly style="color: #1890ff; background: #e6f4ff; width: 100%;"></td>
+            <td><span style="color:#1890ff;">初始态</span></td>
             <td><input type="text" class="input-inline" placeholder="请输入" style="width: 100%;"></td>
             <td><input type="text" class="input-inline" placeholder="请选择" style="width: 100%;"></td>
           </tr>`;
@@ -5681,16 +5745,12 @@
     toast('已删除', 'success');
   }
   // ============ AI Recognize ============
-  // aiSelectedFiles / aiResults / aiPendingResults / aiFilePage / aiFileSelectedSet /
-  // aiCurrentViewIdx / aiFilterMode 已由 installTaskRouting 路由到各任务 state，
-  // 实现按任务（模块）相互独立，此处不再用 let 声明以免遮蔽路由。
+  // aiSelectedFiles / aiResults / aiPendingResults / aiCurrentViewIdx / aiFilterMode
+  // 已由 installTaskRouting 路由到各任务 state，实现按任务（模块）相互独立，
+  // 此处不再用 let 声明以免遮蔽路由。
   let aiProgressTimer = null;
-  // 附件分页大小（每次打开弹窗重置，无需隔离）
-  let aiFilePageSize = 10;
-  // 附件搜索过滤状态（每次打开弹窗重置，无需隔离）
-  let aiSearchName = '';
-  let aiSearchStatus = 'all';
-  let aiSearchCheck = 'all';
+  let aiPage = 1;
+  let aiPageSize = 10;
   // 可搜索下拉选项数据
   const AI_TAX_TYPE_OPTIONS = [
     '海关税费','增值税','其他',
@@ -5957,31 +6017,21 @@
   }
   function openAiRecognizeModal() {
     cleanupAiOverlays();
-    aiFilePage = 1;
-    aiFilePageSize = 10;
-    aiFileSelectedSet = new Set();
     aiCurrentViewIdx = 0;
     aiFilterMode = 'all';
-    document.getElementById('aiPageSize').value = '10';
-    // 重置搜索过滤条件，确保每次进入都展示全部历史附件
-    aiSearchName = '';
-    aiSearchStatus = 'all';
-    aiSearchCheck = 'all';
-    const searchName = document.getElementById('aiSearchName');
-    if (searchName) searchName.value = '';
-    const searchStatus = document.getElementById('aiSearchStatus');
-    if (searchStatus) searchStatus.value = 'all';
-    const searchCheck = document.getElementById('aiSearchCheck');
-    if (searchCheck) searchCheck.value = 'all';
     // 添加键盘导航支持
     document.addEventListener('keydown', aiKeyboardNav);
     // 添加点击外部关闭搜索下拉框
     document.addEventListener('click', aiHandleGlobalClick);
-    // 每次点击均进入发票自动识别界面（上传区 + 历史附件列表），不再恢复上次结果态
+    // 每次点击均进入全新的发票自动识别界面：清空上次的附件、全局填写与识别结果
     aiPendingResults = null;
     aiResults = { success: [], failed: [] };
-    updateAiBadge();
-    renderAiFileList();
+    aiSelectedFiles = [];
+    aiGlobalTaxType = '';
+    aiGlobalSupplier = '';
+    aiPage = 1;
+    aiPageSize = 10;
+    updateAiSelectedCount();
     initAiGlobalFields();
     showAiState('select');
     document.getElementById('aiRecognizeModal').classList.add('show');
@@ -5993,7 +6043,7 @@
     modal.onwheel = function(e) {
       // 检查滚动边界，防止 overscroll 穿透
       const target = e.target;
-      const scrollable = target.closest('#aiSuccessList, .ai-form-panel, .ai-preview-content, #aiStateSelect, #aiFileListWrap');
+      const scrollable = target.closest('#aiSuccessList, .ai-form-panel, .ai-preview-content, #aiStateSelect');
       if (scrollable) {
         const { scrollTop, scrollHeight, clientHeight } = scrollable;
         const atTop = scrollTop <= 0;
@@ -6021,8 +6071,6 @@
     hideModalNavArrows();
     // 关闭时清除错误提示
     showAiInlineError(null);
-    const ae = document.getElementById('aiActionBarError');
-    if (ae) ae.style.display = 'none';
     // 仅当处于结果态且有未确认项时保存
     const resultVisible = document.getElementById('aiStateResult').style.display !== 'none';
     if (resultVisible) {
@@ -6037,7 +6085,6 @@
         aiPendingResults = null;
       }
     }
-    updateAiBadge();
     document.getElementById('aiRecognizeModal').classList.remove('show');
     document.getElementById('aiDrawerPanel').classList.remove('show');
     // 恢复背景滚动
@@ -6068,18 +6115,6 @@
       aiNavNext();
     }
   }
-  function updateAiBadge() {
-    const badge = document.getElementById('aiBadge');
-    if (!badge) return;
-    // 角标取自累计档案中的「待核对」发票数量：只要存在待核对发票即展示，关闭抽屉/取消不再清空
-    const n = (aiSelectedFiles || []).filter(r => r && r.checkResult === 'pending').length;
-    if (n > 0) {
-      badge.textContent = n;
-      badge.style.display = 'inline-block';
-    } else {
-      badge.style.display = 'none';
-    }
-  }
   function showAiState(state) {
     const titleEl = document.getElementById('aiModalTitle');
     if (titleEl) titleEl.textContent = state === 'result' ? i18n('发票自动识别结果') : i18n('发票自动识别');
@@ -6097,50 +6132,35 @@
       hideModalNavArrows();
       const bar = document.getElementById('aiActionBar');
       if (bar) bar.style.display = 'none';
-      // 非结果态时清除校验错误提示
-      const ae = document.getElementById('aiActionBarError');
-      if (ae) ae.style.display = 'none';
     }
     const primary = document.getElementById('aiPrimaryBtn');
     const closeBtn = document.getElementById('aiCloseBtn');
-    const viewBtn = document.getElementById('aiViewResultBtn');
-    const backBtn = document.getElementById('aiBackToListBtn');
     if (state === 'processing') {
       // 进度条弹出框内已提供“取消”，隐藏底栏按钮
       if (primary) primary.style.display = 'none';
       if (closeBtn) closeBtn.style.display = 'none';
-      if (viewBtn) viewBtn.style.display = 'none';
-      if (backBtn) backBtn.style.display = 'none';
     } else {
       if (primary) primary.style.display = '';
-      if (viewBtn) viewBtn.style.display = 'none';
-      if (backBtn) backBtn.style.display = 'none';
       if (state === 'select') {
+        renderAiFileList();
         if (closeBtn) closeBtn.style.display = '';
-        // 按钮显隐逻辑：存在「待识别」或（识别失败 且 待核对）→ 展示【开始识别】；其余（识别成功/识别中/识别失败 已核对）→ 展示【查看识别结果】
+        // 有附件即展示【开始识别】，点击后进入发票识别结果界面
         const hasFiles = aiSelectedFiles.length > 0;
-        const needsRecognize = hasFiles && aiSelectedFiles.some(r => r.status === 'pending' || (r.status === 'failed' && r.checkResult === 'pending'));
         if (primary) {
           primary.textContent = i18n('开始识别');
           primary.disabled = false;
           primary.onclick = startAiRecognize;
-          primary.style.display = needsRecognize ? '' : 'none';
-        }
-        if (viewBtn) {
-          viewBtn.textContent = i18n('查看识别结果');
-          viewBtn.style.display = (hasFiles && !needsRecognize) ? '' : 'none';
-          viewBtn.onclick = viewAiRecognizeResult;
+          primary.style.display = hasFiles ? '' : 'none';
         }
       } else if (state === 'result') {
         if (closeBtn) closeBtn.style.display = '';
-        if (backBtn) backBtn.style.display = '';
         const anySuccess = Array.isArray(aiResults.success) && aiResults.success.length > 0;
         const unconfirmed = anySuccess ? aiResults.success.filter(it => it.confirmed !== true).length : 0;
         if (primary) {
           // 只要存在成功发票即展示「取消 + 全部核对完成」，含全部已核对完成的场景
           if (anySuccess) {
             primary.style.display = '';
-            primary.textContent = unconfirmed > 0 ? i18n('全部核对完成') + '（' + unconfirmed + '）' : i18n('全部核对完成');
+            primary.textContent = i18n('全部核对完成');
             primary.disabled = false;
             primary.onclick = confirmImportAiResults;
           } else {
@@ -6149,15 +6169,6 @@
         }
       }
     }
-  }
-  function backToAiSelect() {
-    // 返回时清除错误提示
-    showAiInlineError(null);
-    const ae = document.getElementById('aiActionBarError');
-    if (ae) ae.style.display = 'none';
-    aiFileSelectedSet.clear();
-    renderAiFileList();
-    showAiState('select');
   }
   function cancelAiProcessing() {
     if (aiProgressTimer) { clearInterval(aiProgressTimer); aiProgressTimer = null; }
@@ -6178,7 +6189,7 @@
       // 没有已识别结果，返回选择界面
       showAiState('select');
     }
-    renderAiFileList();
+    updateAiSelectedCount();
   }
   function handleAiFileSelect(event) {
     const files = event.target.files || [];
@@ -6204,13 +6215,11 @@
       } else { rejected++; }
     });
     if (added > 0) {
-      // 按创建时间倒序展示，新增项位于最前，跳回第一页
-      aiFilePage = 1;
       // 上传成功后隐藏校验提示
       const inlineMsg = document.getElementById('aiInlineMsg');
       if (inlineMsg) inlineMsg.style.display = 'none';
     }
-    renderAiFileList();
+    updateAiSelectedCount();
     showAiState('select');
     const input = document.getElementById('aiFileInput');
     if (input) input.value = '';
@@ -6229,215 +6238,86 @@
   function isFilePdf(file) {
     return !file.type.startsWith('image/') || /\.pdf$/i.test(file.name);
   }
-  function renderAiStatusBadge(status) {
-    const map = {
-      pending:    { text: i18n('待识别'),   color: '#999' },
-      processing: { text: i18n('识别中'),   color: '#1890ff' },
-      success:    { text: i18n('识别成功'), color: '#52c41a' },
-      failed:     { text: i18n('识别失败'), color: '#ff4d4f' }
-    };
-    const m = map[status] || { text: status || '-', color: '#999' };
-    return `<span style="display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;line-height:18px;color:${m.color};border:1px solid ${m.color};background:${m.color}14;white-space:nowrap;">${m.text}</span>`;
-  }
-  function renderAiCheckBadge(checkResult) {
-    if (!checkResult) return '';
-    const map = {
-      pending: { text: i18n('待核对'), color: '#fa8c16' },
-      done:    { text: i18n('已核对'), color: '#52c41a' }
-    };
-    const m = map[checkResult] || { text: checkResult, color: '#999' };
-    return `<span style="display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;line-height:18px;color:${m.color};border:1px solid ${m.color};background:${m.color}14;white-space:nowrap;">${m.text}</span>`;
-  }
-  function aiGetFilteredIndices() {
-    const name = aiSearchName.trim().toLowerCase();
-    const indices = aiSelectedFiles.reduce((acc, f, i) => {
-      if (name && !(f.name || '').toLowerCase().includes(name)) return acc;
-      if (aiSearchStatus !== 'all' && f.status !== aiSearchStatus) return acc;
-      if (aiSearchCheck !== 'all' && f.checkResult !== aiSearchCheck) return acc;
-      acc.push(i);
-      return acc;
-    }, []);
-    indices.sort((a, b) => (aiSelectedFiles[b].createdAt || 0) - (aiSelectedFiles[a].createdAt || 0));
-    return indices;
-  }
-  function aiApplySearch() {
-    aiSearchName = document.getElementById('aiSearchName').value || '';
-    aiSearchStatus = document.getElementById('aiSearchStatus').value;
-    aiSearchCheck = document.getElementById('aiSearchCheck').value;
-    aiFilePage = 1;
-    renderAiFileList();
-  }
-  function aiResetSearch() {
-    aiSearchName = '';
-    aiSearchStatus = 'all';
-    aiSearchCheck = 'all';
-    const nameInput = document.getElementById('aiSearchName');
-    if (nameInput) nameInput.value = '';
-    const statusSelect = document.getElementById('aiSearchStatus');
-    if (statusSelect) statusSelect.value = 'all';
-    const checkSelect = document.getElementById('aiSearchCheck');
-    if (checkSelect) checkSelect.value = 'all';
-    aiFilePage = 1;
-    renderAiFileList();
-  }
-  function updateAiSelectAllState() {
-    const filteredIdx = aiGetFilteredIndices();
-    const selected = filteredIdx.filter(i => aiFileSelectedSet.has(i)).length;
-    const selectAll = document.getElementById('aiFileSelectAll');
-    selectAll.checked = filteredIdx.length > 0 && selected === filteredIdx.length;
-    selectAll.indeterminate = selected > 0 && selected < filteredIdx.length;
-  }
-  function updateAiBatchButtons() {
-    const downloadBtn = document.getElementById('aiBatchDownloadBtn');
-    const deleteBtn = document.getElementById('aiBatchDeleteBtn');
-    if (downloadBtn) downloadBtn.disabled = aiFileSelectedSet.size === 0;
-    if (deleteBtn) deleteBtn.disabled = aiFileSelectedSet.size === 0;
-  }
-  function renderAiFileList() {
-    // 仅清关预付单：附件列表「附件大小」列替换为「税费类型」，并新增「开票供应商」列
-    const isPrepaid = isAiCustomsPrepaid();
-    const thSize = document.getElementById('aiThSize');
-    const thTax = document.getElementById('aiThTaxType');
-    const thSup = document.getElementById('aiThSupplier');
-    if (thSize) thSize.style.display = isPrepaid ? 'none' : '';
-    if (thTax) thTax.style.display = isPrepaid ? '' : 'none';
-    if (thSup) thSup.style.display = isPrepaid ? '' : 'none';
-    const wrap = document.getElementById('aiFileListWrap');
+  function updateAiSelectedCount() {
     const selLabel = document.getElementById('aiSelectedCountLabel');
     if (selLabel) selLabel.textContent = currentLang === 'en'
       ? aiSelectedFiles.length + ' attachment(s) selected'
       : '已选 ' + aiSelectedFiles.length + ' 个附件';
-    if (aiSelectedFiles.length === 0) {
-      wrap.style.display = 'none';
-      aiFileSelectedSet.clear();
+  }
+  function renderAiFileList() {
+    const body = document.getElementById('aiFileListBody');
+    const listWrap = document.getElementById('aiFileListWrap');
+    const pagination = document.getElementById('aiFilePagination');
+    if (!body) return;
+    const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const total = aiSelectedFiles.length;
+    if (!total) {
+      if (listWrap) listWrap.style.display = 'none';
+      if (pagination) pagination.style.display = 'none';
       return;
     }
-    wrap.style.display = 'flex';
-    // 根据搜索条件过滤出匹配的原始下标
-    const filteredIdx = aiGetFilteredIndices();
-    // 修正越界页码
-    const totalPages = Math.max(1, Math.ceil(filteredIdx.length / aiFilePageSize));
-    if (aiFilePage > totalPages) aiFilePage = totalPages;
-    if (aiFilePage < 1) aiFilePage = 1;
-    const start = (aiFilePage - 1) * aiFilePageSize;
-    const end = Math.min(start + aiFilePageSize, filteredIdx.length);
-    const pageIdx = filteredIdx.slice(start, end);
-
-    // 表格 tbody
-    const tbody = document.getElementById('aiFileTbody');
-    if (pageIdx.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="${isPrepaid ? 9 : 8}" class="ai-empty-row">${i18n('无匹配数据')}</td></tr>`;
-    } else {
-      tbody.innerHTML = pageIdx.map((globalIdx, k) => {
-        const f = aiSelectedFiles[globalIdx];
-        const checked = aiFileSelectedSet.has(globalIdx) ? 'checked' : '';
-        const isPdf = f.isPdf;
-        const iconClass = isPdf ? 'pdf' : 'img';
-        const iconText = isPdf ? 'PDF' : 'IMG';
-        const format = f.format;
-        return `
-          <tr>
-            <td><input type="checkbox" class="ai-row-check" data-idx="${globalIdx}" ${checked} onchange="aiToggleRow(this, ${globalIdx})"></td>
-            <td>${start + k + 1}</td>
-            <td>
-              <div class="ai-file-cell">
-                <div class="ai-file-icon ${iconClass}">${iconText}</div>
-                <span class="ai-file-name-cell" title="${f.name}">${f.name}</span>
-              </div>
-            </td>
-            <td>${format}</td>
-            ${isPrepaid ? `<td>${f.taxType || ''}</td><td>${f.supplier || ''}</td>` : `<td>${formatFileSize(f.size)}</td>`}
-            <td>${renderAiStatusBadge(f.status)}</td>
-            <td>${renderAiCheckBadge(f.checkResult)}</td>
-            <td>
-              <div class="ai-row-actions">
-                <button class="ai-mini-btn danger" onclick="removeAiFile(${globalIdx})">${i18n('删除')}</button>
-              </div>
-            </td>
-          </tr>`;
-      }).join('');
+    if (listWrap) listWrap.style.display = '';
+    const totalPages = Math.max(1, Math.ceil(total / aiPageSize));
+    if (aiPage < 1) aiPage = 1;
+    if (aiPage > totalPages) aiPage = totalPages;
+    const start = (aiPage - 1) * aiPageSize;
+    const pageItems = aiSelectedFiles.slice(start, start + aiPageSize);
+    body.innerHTML = pageItems.map((f, i) => {
+      const absIdx = start + i;
+      const icon = f.isPdf
+        ? '<span class="ai-file-icon pdf">PDF</span>'
+        : '<span class="ai-file-icon img">' + esc(f.format || 'IMG') + '</span>';
+      return '<tr>' +
+        '<td>' + (absIdx + 1) + '</td>' +
+        '<td><div class="ai-file-cell">' + icon + '<a class="ai-file-name-cell" href="javascript:;" onclick="downloadAiFile(' + absIdx + ')" title="' + esc(f.name) + '">' + esc(f.name) + '</a></div></td>' +
+        '<td>' + esc(f.format || '-') + '</td>' +
+        '<td><div class="ai-row-actions"><button class="ai-mini-btn danger" onclick="deleteAiFile(' + absIdx + ')">' + i18n('删除') + '</button></div></td>' +
+        '</tr>';
+    }).join('');
+    if (pagination) {
+      pagination.style.display = 'flex';
+      const info = document.getElementById('aiPageInfo');
+      if (info) info.textContent = aiPage + ' / ' + totalPages;
+      const prev = document.getElementById('aiPrevPageBtn');
+      const next = document.getElementById('aiNextPageBtn');
+      if (prev) prev.disabled = aiPage <= 1;
+      if (next) next.disabled = aiPage >= totalPages;
+      const sel = document.getElementById('aiPageSizeSelect');
+      if (sel) sel.value = String(aiPageSize);
     }
-    // 工具栏统计
-    const totalLabel = document.getElementById('aiFileTotalLabel');
-    if (totalLabel) totalLabel.textContent = currentLang === 'en'
-      ? 'Total ' + aiSelectedFiles.length + ' item(s)'
-      : '共 ' + aiSelectedFiles.length + ' 条';
-    const checkedLabel = document.getElementById('aiFileCheckedLabel');
-    if (checkedLabel) checkedLabel.textContent = currentLang === 'en'
-      ? 'Selected ' + aiFileSelectedSet.size + ' item(s)'
-      : '已选 ' + aiFileSelectedSet.size + ' 条';
-    // 全选框状态（基于搜索结果）
-    updateAiSelectAllState();
-    // 批量按钮状态
-    updateAiBatchButtons();
-    // 分页
-    document.getElementById('aiPageInfo').textContent = `${aiFilePage} / ${totalPages}`;
-    document.getElementById('aiPagePrev').disabled = aiFilePage <= 1;
-    document.getElementById('aiPageNext').disabled = aiFilePage >= totalPages;
   }
-  function aiToggleRow(checkbox, idx) {
-    if (checkbox.checked) aiFileSelectedSet.add(idx);
-    else aiFileSelectedSet.delete(idx);
-    const checkedLabel = document.getElementById('aiFileCheckedLabel');
-    if (checkedLabel) checkedLabel.textContent = currentLang === 'en'
-      ? 'Selected ' + aiFileSelectedSet.size + ' item(s)'
-      : '已选 ' + aiFileSelectedSet.size + ' 条';
-    updateAiSelectAllState();
-    updateAiBatchButtons();
-  }
-  function aiToggleSelectAll(checkbox) {
-    // 全选作用于当前搜索结果（跨页），而非仅当前页
-    const filteredIdx = aiGetFilteredIndices();
-    if (checkbox.checked) {
-      filteredIdx.forEach(i => aiFileSelectedSet.add(i));
-    } else {
-      filteredIdx.forEach(i => aiFileSelectedSet.delete(i));
-    }
-    renderAiFileList();
-    updateAiBatchButtons();
-  }
-  function aiChangePage(delta) {
-    const totalPages = Math.max(1, Math.ceil(aiGetFilteredIndices().length / aiFilePageSize));
-    aiFilePage = Math.min(Math.max(1, aiFilePage + delta), totalPages);
-    renderAiFileList();
-  }
-  function aiChangePageSize(value) {
-    aiFilePageSize = parseInt(value, 10) || 10;
-    aiFilePage = 1;
-    renderAiFileList();
-  }
-  function aiBatchDelete() {
-    if (aiFileSelectedSet.size === 0) return;
-    const count = aiFileSelectedSet.size;
-    showAiConfirm(currentLang === 'en' ? `Delete the selected ${count} attachment(s)?` : `确定要删除选中的 ${count} 个附件吗？`, () => {
-      const indices = Array.from(aiFileSelectedSet).sort((a, b) => b - a);
-      indices.forEach(i => aiSelectedFiles.splice(i, 1));
-      aiFileSelectedSet.clear();
-      renderAiFileList();
-      showAiState('select');
-      updateAiBatchButtons();
-      toast(currentLang === 'en' ? `Deleted ${indices.length} attachment(s)` : `已删除 ${indices.length} 个附件`, 'success');
-    });
-  }
-  function aiBatchDownload() {
-    if (aiFileSelectedSet.size === 0) return;
-    const targets = Array.from(aiFileSelectedSet).sort((a,b)=>a-b).map(i => aiSelectedFiles[i]).filter(Boolean);
-    toast(currentLang === 'en' ? `Downloading ${targets.length} attachment(s)...` : `开始下载 ${targets.length} 个附件...`, 'success');
-    targets.forEach((f, i) => {
-      setTimeout(() => { if (f && f.file) aiDownloadFile(f.file); }, i * 200);
-    });
-  }
-  function aiDownloadOne(idx) {
+  function deleteAiFile(idx) {
     const f = aiSelectedFiles[idx];
-    if (!f || !f.file) return;
-    aiDownloadFile(f.file);
-    toast(currentLang === 'en' ? `Downloading: ${f.name}` : `开始下载：${f.name}`, 'success');
+    if (!f) return;
+    showAiConfirm(i18n('确定要删除该附件吗？'), () => {
+      aiSelectedFiles.splice(idx, 1);
+      updateAiSelectedCount();
+      showAiState('select');
+    });
   }
-  function aiDownloadFile(file) {
-    const url = URL.createObjectURL(file);
+  function aiPrevPage() {
+    if (aiPage > 1) { aiPage--; renderAiFileList(); }
+  }
+  function aiNextPage() {
+    const totalPages = Math.max(1, Math.ceil(aiSelectedFiles.length / aiPageSize));
+    if (aiPage < totalPages) { aiPage++; renderAiFileList(); }
+  }
+  function aiChangePageSize(v) {
+    aiPageSize = parseInt(v, 10) || 10;
+    aiPage = 1;
+    renderAiFileList();
+  }
+  function downloadAiFile(idx) {
+    const item = aiSelectedFiles[idx];
+    if (!item || !item.file) return;
+    if (!(item.file instanceof Blob)) {
+      toast(i18n('演示模式下不支持下载'), 'info');
+      return;
+    }
+    const url = URL.createObjectURL(item.file);
     const a = document.createElement('a');
     a.href = url;
-    a.download = file.name;
+    a.download = item.file.name;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -6463,26 +6343,6 @@
       closeAiConfirm();
     }
   }
-  function removeAiFile(idx) {
-    showAiConfirm(i18n('确定要删除所选附件吗？'), () => {
-      aiSelectedFiles.splice(idx, 1);
-      // 重建选中集合（索引下移）
-      const newSet = new Set();
-      aiFileSelectedSet.forEach(i => {
-        if (i < idx) newSet.add(i);
-        else if (i > idx) newSet.add(i - 1);
-      });
-      aiFileSelectedSet = newSet;
-      renderAiFileList();
-      showAiState('select');
-      toast(i18n('已删除'), 'success');
-    });
-  }
-  function formatFileSize(bytes) {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-  }
   function showAiInlineMsg(msg) {
     const el = document.getElementById('aiInlineMsg');
     if (!el) return;
@@ -6494,35 +6354,14 @@
   function startAiRecognize() {
     // 开始新识别时清除上一次的校验错误提示和数据
     showAiInlineError(null);
-    const ae = document.getElementById('aiActionBarError');
-    if (ae) ae.style.display = 'none';
     aiFailReportRows = [];
-    const hasSelection = aiFileSelectedSet.size > 0;
     const recognizable = r => r.status === 'pending' || (r.status === 'failed' && r.checkResult === 'pending');
-    let targets;
-    if (hasSelection) {
-      const sel = new Set(aiFileSelectedSet);
-      targets = aiSelectedFiles.filter((r, i) => sel.has(i) && recognizable(r));
-    } else {
-      targets = aiSelectedFiles.filter(recognizable);
-    }
+    const targets = aiSelectedFiles.filter(recognizable);
     if (targets.length === 0) {
-      // 区分「识别失败但已核对」的附件，给出准确提示，避免与表格里的「识别失败」状态矛盾
       const failedDone = aiSelectedFiles.filter(r => r.status === 'failed' && r.checkResult === 'done').length;
-      let msg;
-      if (hasSelection) {
-        // 勾选的附件全部为「已核对」或「识别中」时，提示没有待识别附件
-        const sel = new Set(aiFileSelectedSet);
-        const selected = aiSelectedFiles.filter((r, i) => sel.has(i));
-        const nonePendingRecog = selected.length > 0 && selected.every(r => r.checkResult === 'done' || r.status === 'processing');
-        msg = nonePendingRecog
-          ? i18n('已选附件没有待识别或识别失败-待核对的附件')
-          : i18n('所选记录中没有待识别或识别失败的附件');
-      } else if (failedDone > 0) {
-        msg = i18n('识别失败的附件已核对完成，无需再次识别');
-      } else {
-        msg = i18n('没有待识别或识别失败的附件');
-      }
+      const msg = failedDone > 0
+        ? i18n('识别失败的附件已核对完成，无需再次识别')
+        : i18n('没有待识别或识别失败的附件');
       showAiInlineMsg(msg);
       return;
     }
@@ -6547,7 +6386,6 @@
     aiProgressTimer = setInterval(() => {
       if (idx >= total) {
         clearInterval(aiProgressTimer); aiProgressTimer = null;
-        renderAiFileList();
         setTimeout(() => {
           // 展示该单据所有累计的识别情况，并默认选中【未核对】筛选
           rebuildAllAiResults();
@@ -6588,55 +6426,6 @@
       circle.setAttribute('stroke-dashoffset', circumference * (1 - pct / 100));
     }, 600);
   }
-  function recognizeOneRecord(globalIdx, isRetry) {
-    const rec = aiSelectedFiles[globalIdx];
-    if (!rec || (rec.status !== 'pending' && rec.status !== 'failed')) return;
-    if (!validateAiGlobalFields()) return;
-    showAiState('processing');
-    rec.status = 'processing';
-    const circle = document.getElementById('aiProgressCircle');
-    const percentEl = document.getElementById('aiProgressPercent');
-    const circumference = 2 * Math.PI * 65;
-    circle.setAttribute('stroke-dashoffset', circumference);
-    percentEl.textContent = '0%';
-    aiResults = { success: [], failed: [] };
-    aiProgressTimer = setInterval(() => {
-      clearInterval(aiProgressTimer);
-      aiProgressTimer = null;
-      const ok = Math.random() > 0.5;
-      if (ok) {
-        rec.status = 'success';
-        rec.checkResult = 'pending';
-        rec.failReason = '';
-        const item = buildSuccessResult(rec);
-        rec.taxType = item.values.taxType;
-        rec.supplier = item.values.supplier;
-        aiResults.success.push(item);
-      } else {
-        rec.status = 'failed';
-        rec.checkResult = 'pending';
-        rec.failReason = isRetry
-          ? (currentLang === 'en' ? 'Re-recognition still failed: ' : '重新识别仍失败：') + (rec.failReason || i18n('识别失败'))
-          : i18n('识别失败');
-        // 识别失败时，税费类型/开票供应商回填全局填写区默认值，保证文件列表这两列显示值
-        if (rec.taxType == null) rec.taxType = aiGlobalTaxType || '';
-        if (rec.supplier == null) rec.supplier = aiGlobalSupplier || '';
-        aiResults.failed.push({ file: rec.file, reason: rec.failReason, record: rec });
-      }
-      renderAiFileList();
-      setTimeout(() => {
-        rebuildAllAiResults();
-        aiSetFilter(aiResults.success.some(it => it.confirmed !== true && !it.failed) ? 'unconfirmed' : 'all');
-        showAiState('result');
-      }, 300);
-    }, 600);
-  }
-  function startSingleAiRecognize(globalIdx) {
-    recognizeOneRecord(globalIdx, false);
-  }
-  function retryAiRecord(globalIdx) {
-    recognizeOneRecord(globalIdx, true);
-  }
   // 根据累计档案（aiSelectedFiles）重建识别结果：展示该单据所有已识别的成功/失败记录
   function rebuildAllAiResults() {
     const success = [];
@@ -6672,44 +6461,6 @@
       if (typeof rec.__invoiceIdx === 'number') item.__invoiceIdx = rec.__invoiceIdx;
     }
     return item;
-  }
-  function viewAiRecognizeResult() {
-    // 根据累计档案重建识别结果（成功/失败），仅对选中的记录操作（未选中则全部）
-    const hasSelection = aiFileSelectedSet.size > 0;
-    const sel = new Set(aiFileSelectedSet);
-    const success = [];
-    const failed = [];
-    const order = aiSelectedFiles
-      .map((_, i) => i)
-      .sort((a, b) => (aiSelectedFiles[b].createdAt || 0) - (aiSelectedFiles[a].createdAt || 0));
-    order.forEach((i) => {
-      if (hasSelection && !sel.has(i)) return;
-      const rec = aiSelectedFiles[i];
-      if (rec.status === 'success') {
-        const item = buildSuccessResult(rec);
-        item.confirmed = rec.checkResult === 'done';
-        restoreSavedAiItem(item, rec);
-        success.push(item);
-      } else if (rec.status === 'failed') {
-        const item = buildFailedResult(rec);
-        const isDone = rec.checkResult === 'done';
-        item.confirmed = isDone;
-        if (isDone) item.failed = false;
-        restoreSavedAiItem(item, rec);
-        success.push(item);
-        if (!isDone) failed.push({ file: rec.file, reason: rec.failReason || i18n('识别失败'), record: rec });
-      }
-    });
-    if (success.length === 0 && failed.length === 0) {
-      showAiInlineMsg(hasSelection ? i18n('所选记录中暂无已识别的附件') : i18n('暂无已识别的附件'));
-      return;
-    }
-    aiResults = { success, failed };
-    aiCurrentViewIdx = 0;
-    // 存在未核对数据时默认选中【未核对】；全部已核对完成时默认选中【全部】
-    aiFilterMode = success.some(it => it.confirmed !== true && !it.failed) ? 'unconfirmed' : 'all';
-    renderAiResults();
-    showAiState('result');
   }
   function buildSuccessResult(record) {
     // 模拟识别字段值，并生成置信度
@@ -6897,13 +6648,6 @@
       }
       const bar = document.getElementById('aiActionBar');
       bar.style.display = filteredTotal > 0 ? 'flex' : 'none';
-      // 校验失败提示（如有）
-      const inlineErrorHtml = aiFailReportRows.length > 0
-        ? `<div class="ai-inline-error-in-bar" style="margin-bottom:6px;"><span style="color:#ff4d4f; font-weight:600;">${aiFailReportRows.length}</span>` +
-          (currentLang === 'en' ? ` file(s) failed validation. Please correct them.` : `份文件校验失败，请重新修改。`) +
-          `<a href="javascript:void(0)" onclick="downloadAiFailReport()" style="color:#1890ff; text-decoration:underline; margin-left:4px;">` +
-          (currentLang === 'en' ? `Download the validation-failure report.` : `点击下载具体校验失败文件及失败原因。`) + `</a></div>`
-        : '';
       bar.innerHTML = `
         <span style="display:flex; align-items:center; gap:6px; font-size:12px; color:#666;">
           ${currentLang === 'en' ? `<span>Total: <strong style="color:#1890ff;">${total}</strong> file(s)</span>` : `<span>共 <strong style="color:#1890ff;">${total}</strong> 张</span>`}
@@ -6919,19 +6663,6 @@
           <button class="ai-mini-btn primary" onclick="confirmSingleAiFile(${cur})">${i18n('核对完成')}</button>` : `<span style="color:#999; font-size:12px;">${i18n('该筛选下无数据')}</span>`}
         </span>
       `;
-      // 校验失败提示放在 action bar 上方
-      let errDiv = document.getElementById('aiActionBarError');
-      if (inlineErrorHtml) {
-        if (!errDiv) {
-          errDiv = document.createElement('div');
-          errDiv.id = 'aiActionBarError';
-          bar.parentNode.insertBefore(errDiv, bar);
-        }
-        errDiv.innerHTML = inlineErrorHtml;
-        errDiv.style.display = '';
-      } else if (errDiv) {
-        errDiv.style.display = 'none';
-      }
       if (item) {
         successList.innerHTML = renderAiSuccessItem(item, cur, cur, total);
         // 进入结果界面即校验：必填字段为空时立即在其下方展示红色提示
@@ -6948,7 +6679,7 @@
     if (primary) {
       if (aiResults.success.length > 0) {
         primary.style.display = '';
-        primary.textContent = (aiResults.success.length - confirmedCount) > 0 ? i18n('全部核对完成') + '（' + (aiResults.success.length - confirmedCount) + '）' : i18n('全部核对完成');
+        primary.textContent = i18n('全部核对完成');
         primary.disabled = false;
         primary.onclick = confirmImportAiResults;
       } else {
@@ -7039,11 +6770,14 @@
         // 根据字段类型设置不同的placeholder和blur事件
         let placeholder = '';
         let blurHandler = '';
-        if (['vatImportTax', 'prepaidIncomeTax', 'invoicePayableTotal', 'prepaidVat'].includes(field.key)) {
-          placeholder = i18n('正数发票填正数，负数发票填负数');
+        if (['vatImportTax', 'prepaidIncomeTax', 'prepaidVat'].includes(field.key)) {
+          placeholder = i18n('请填写正数');
           blurHandler = ` onblur="validateSingleFieldSign(${idx}, '${field.key}')"`;
         } else if (['withholdingIncomeTax', 'withholdingVat'].includes(field.key)) {
-          placeholder = i18n('正数发票填负数，负数发票填正数');
+          placeholder = i18n('请填写负数');
+          blurHandler = ` onblur="validateSingleFieldSign(${idx}, '${field.key}')"`;
+        } else if (field.key === 'invoicePayableTotal') {
+          placeholder = i18n('请填写');
           blurHandler = ` onblur="validateSingleFieldSign(${idx}, '${field.key}')"`;
         }
         const placeholderAttr = placeholder ? ` placeholder="${placeholder}"` : '';
@@ -7388,18 +7122,10 @@
       if (removed && removed.failed && removed.record) {
         aiResults.failed = aiResults.failed.filter(f => f.record !== removed.record);
       }
-      // 同步删除"发票自动识别界面列表区"（附件列表）中对应的附件记录
+      // 同步删除累计档案（aiSelectedFiles）中对应的附件记录
       const recIdx = removed && removed.record ? aiSelectedFiles.indexOf(removed.record) : -1;
       if (recIdx >= 0) {
         aiSelectedFiles.splice(recIdx, 1);
-        // 同步修正选中集合索引，保持与 aiSelectedFiles 对齐
-        const newSet = new Set();
-        aiFileSelectedSet.forEach(i => {
-          if (i < recIdx) newSet.add(i);
-          else if (i > recIdx) newSet.add(i - 1);
-        });
-        aiFileSelectedSet = newSet;
-        renderAiFileList();
       }
       if (aiCurrentViewIdx >= aiResults.success.length) aiCurrentViewIdx = Math.max(0, aiResults.success.length - 1);
       // 需求2：如果该项已核对完成并保存到 invoiceData，则同步删除 invoiceData 中对应的行
@@ -8007,21 +7733,12 @@
     }));
     const count = failedFiles.length;
     const en = currentLang === 'en';
-    // 仅在操作栏上方显示校验失败提示
-    const bar = document.getElementById('aiActionBar');
-    if (bar && bar.style.display !== 'none') {
-      let errDiv = document.getElementById('aiActionBarError');
-      if (!errDiv) {
-        errDiv = document.createElement('div');
-        errDiv.id = 'aiActionBarError';
-        bar.parentNode.insertBefore(errDiv, bar);
-      }
-      errDiv.innerHTML = `<div class="ai-inline-error-in-bar"><span style="color:#ff4d4f; font-weight:600;">${count}</span>` +
-        (en ? ` file(s) failed validation. Please correct them.` : `份文件校验失败，请重新修改。`) +
-        `<a href="javascript:void(0)" onclick="downloadAiFailReport()" style="color:#1890ff; text-decoration:underline; margin-left:4px;">` +
-        (en ? `Download the validation-failure report.` : `点击下载具体校验失败文件及失败原因。`) + `</a></div>`;
-      errDiv.style.display = '';
-    }
+    // 单个核对与全部核对的校验失败提示统一展示在同一个固定区域（aiInlineError）
+    const msgHtml = `<span style="color:#ff4d4f; font-weight:600;">${count}</span>` +
+      (en ? ` file(s) failed validation. Please correct them.` : `份文件校验失败，请重新修改。`) +
+      `<a href="javascript:void(0)" onclick="downloadAiFailReport()" style="color:#1890ff; text-decoration:underline; margin-left:4px;">` +
+      (en ? `Download the validation-failure report.` : `点击下载具体校验失败文件及失败原因。`) + `</a>`;
+    showAiInlineError([msgHtml]);
   }
   function downloadAiFailReport() {
     const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
